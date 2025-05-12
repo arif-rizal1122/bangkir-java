@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bank.banking.dto.request.UserRequest;
 import com.bank.banking.dto.response.BankResponse;
-import com.bank.banking.service.users.UserServiceImpl;
+import com.bank.banking.service.users.UserService;
 
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
     
     @Autowired 
-    UserServiceImpl userService;
+    UserService userService;
 
     @PostMapping("/create")
     public  BankResponse createAccount(@RequestBody UserRequest userRequest){

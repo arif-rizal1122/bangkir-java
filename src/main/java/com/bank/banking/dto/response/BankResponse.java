@@ -1,5 +1,7 @@
 package com.bank.banking.dto.response;
 
+import com.bank.banking.dto.AccountInfo;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

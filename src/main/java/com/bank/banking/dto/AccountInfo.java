@@ -1,4 +1,4 @@
-package com.bank.banking.dto.response;
+package com.bank.banking.dto;
 
 import java.math.BigDecimal;
 
