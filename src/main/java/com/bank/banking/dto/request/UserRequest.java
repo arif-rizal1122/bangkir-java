@@ -13,7 +13,7 @@ import lombok.Setter;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserResponse {
+public class UserRequest {
     
      private String firstName;
 
@@ -32,6 +32,8 @@ public class UserResponse {
     private BigDecimal accountBalance;
 
     private String email;
+
+    private String phoneNumber;
     
     private String alternativePhoneNumber;
 
