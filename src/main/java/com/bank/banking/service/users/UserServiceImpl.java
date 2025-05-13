@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
      }
  
      @Override
-     public String nameEnquery(EnquiryRequest request) {
+     public String nameEnquiry(EnquiryRequest request) {
          boolean isAccountExists = userRepository.existsByAccountNumber(request.getAccountNumber());
          if (!isAccountExists) {
             return AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE;
