@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.bank.banking.dto.AccountInfo;
 import com.bank.banking.dto.EmailDetails;
+import com.bank.banking.dto.request.EnquiryRequest;
 import com.bank.banking.dto.request.UserRequest;
 import com.bank.banking.dto.response.BankResponse;
 import com.bank.banking.entity.User;
@@ -70,5 +71,38 @@ public class UserServiceImpl implements UserService {
      * */ 
     
 
+     @Override
+     public BankResponse balanceEnquiry(EnquiryRequest enquiryRequest) {
+        // check if the provided account number existsin the exists
+        boolean isAccountExists = userRepository.existsByAccountNumber(enquiryRequest.getAccountNumber());
+        if (!isAccountExists) {
+            return BankResponse.builder()
+            .responseCode(AccountUtils.ACCOUNT_NUMBER_EXISTS_CODE)
+            .responseMessage(AccountUtils.ACCOUNT_NUMBER__EXISTS_MESSAGE)
+            .accountInfo(null)
+            .build();
+        }
+        User foundUser = userRepository.findByAccountNumber(enquiryRequest.getAccountNumber());
+        return BankResponse.builder()
+               .responseCode(AccountUtils.ACCOUNT_FOUND_CODE)
+               .responseMessage(AccountUtils.ACCOUNT_FOUND_SUCCESS)
+               .accountInfo(AccountInfo.builder()
+               .accountBalance(foundUser.getAccountBalance())
+               .accountNumber(enquiryRequest.getAccountNumber())
+               .accountName(foundUser.getFirstName() + " " + foundUser.getLastName() + " " + foundUser.getOtherName())
+               .build())
+               .build();
+     }
+ 
+     @Override
+     public String nameEnquery(EnquiryRequest request) {
+         boolean isAccountExists = userRepository.existsByAccountNumber(request.getAccountNumber());
+         if (!isAccountExists) {
+            return AccountUtils.ACCOUNT_NOT_EXISTS_MESSAGE;
+         }
+         User foundUser = userRepository.findByAccountNumber(request.getAccountNumber()); 
+         return foundUser.getFirstName() + " " + foundUser.getLastName() + " " + foundUser.getOtherName();
+     }
+ 
     
 }
