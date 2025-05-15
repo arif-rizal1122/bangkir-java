@@ -122,7 +122,7 @@ public class UserServiceImpl implements UserService {
         }
         User userCredit = userRepository.findByAccountNumber(request.getAccountNumber());
         userCredit.setAccountBalance(userCredit.getAccountBalance().add(request.getAmount()));
-
+        userRepository.save(userCredit);
         return BankResponse.builder()
             .responseCode(AccountUtils.ACCOUNT_CREATION_SUCCESS)
             .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
