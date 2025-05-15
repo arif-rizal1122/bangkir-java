@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 
 import com.bank.banking.dto.AccountInfo;
 import com.bank.banking.dto.EmailDetails;
+import com.bank.banking.dto.request.CreditDebitRequest;
 import com.bank.banking.dto.request.EnquiryRequest;
 import com.bank.banking.dto.request.UserRequest;
 import com.bank.banking.dto.response.BankResponse;
@@ -65,6 +66,9 @@ public class UserServiceImpl implements UserService {
 
 
 
+
+
+
     /**
      * balance enquery, name enquery, credit, debit, transfer
      * 
@@ -103,6 +107,34 @@ public class UserServiceImpl implements UserService {
          User foundUser = userRepository.findByAccountNumber(request.getAccountNumber()); 
          return foundUser.getFirstName() + " " + foundUser.getLastName() + " " + foundUser.getOtherName();
      }
+
+
+
+     @Override
+     public BankResponse creditAccount(CreditDebitRequest request) {
+         boolean isAccountExists = userRepository.existsByAccountNumber(request.getAccountNumber());
+         if (!isAccountExists) {
+            return BankResponse.builder()
+            .responseCode(AccountUtils.ACCOUNT_NUMBER_EXISTS_CODE)
+            .responseMessage(AccountUtils.ACCOUNT_NUMBER__EXISTS_MESSAGE)
+            .accountInfo(null)
+            .build();
+        }
+        User userCredit = userRepository.findByAccountNumber(request.getAccountNumber());
+        userCredit.setAccountBalance(userCredit.getAccountBalance().add(request.getAmount()));
+
+        return BankResponse.builder()
+            .responseCode(AccountUtils.ACCOUNT_CREATION_SUCCESS)
+            .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
+            .accountInfo(AccountInfo.builder()
+            .accountNumber(request.getAccountNumber())
+            .accountName(userCredit.getFirstName() + " " + userCredit.getLastName() + " " + userCredit.getOtherName())
+            .accountBalance(userCredit.getAccountBalance())
+            .build())
+            .build();
+     }
+
+ 
  
     
 }

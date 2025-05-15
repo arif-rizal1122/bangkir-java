@@ -17,6 +17,9 @@ public class AccountUtils  {
     public static final String ACCOUNT_FOUND_SUCCESS = "account has been found";
     public static final String ACCOUNT_NOT_EXISTS_MESSAGE = "account not found";
 
+    public static final String ACCOUNT_CREDITED_SUCCESS = "005";
+    public static final String ACCOUNT_CREDITED_MESSAGE = "user credited successfully!!";
+
     public static String generatedAccountNumber(){
     /**
      * 2025 + random 6 digits
