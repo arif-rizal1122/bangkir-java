@@ -20,6 +20,9 @@ public class UserServiceImpl implements UserService {
     @Autowired
     UserRepository userRepository;
 
+
+
+
     @Autowired
     private UserMapper userMapper;
 
@@ -136,5 +139,41 @@ public class UserServiceImpl implements UserService {
 
  
  
-    
+     @Override
+     public BankResponse debitAccount(CreditDebitRequest request) {
+        // check if the account exists
+        boolean isAccountExists = userRepository.existsByAccountNumber(request.getAccountNumber());
+        if (!isAccountExists) {
+           return BankResponse.builder()
+           .responseCode(AccountUtils.ACCOUNT_NUMBER_EXISTS_CODE)
+           .responseMessage(AccountUtils.ACCOUNT_NUMBER__EXISTS_MESSAGE)
+           .accountInfo(null)
+           .build();
+       }
+        // check if the amount you intead to withdraw is not more than
+
+       User userToDebit = userRepository.findByAccountNumber(request.getAccountNumber());
+       int availableBalance = Integer.parseInt(userToDebit.getAccountBalance().toString());
+       int debitAmount = Integer.parseInt(request.getAmount().toString());
+       if (availableBalance < debitAmount) {
+           return BankResponse.builder()
+               .responseCode(AccountUtils.INSUFFICIENT_BALANCE_CODE)
+               .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
+               .accountInfo(null)
+           .build();
+       } else {
+            userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(request.getAmount()));
+            userRepository.save(userToDebit);
+            return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_DEBITED_SUCCESS)
+                .responseMessage(AccountUtils.ACCOUNT_DEBITED_MESSAGE)
+                .accountInfo(AccountInfo.builder()
+                .accountNumber(request.getAccountNumber())
+                .accountName(userToDebit.getFirstName() + " " + userToDebit.getLastName() + " " + userToDebit.getOtherName())
+                .build())
+            .build();
+       }
+
+     }
+ 
 }
