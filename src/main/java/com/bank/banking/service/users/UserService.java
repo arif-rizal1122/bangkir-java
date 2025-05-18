@@ -2,6 +2,7 @@ package com.bank.banking.service.users;
 
 import com.bank.banking.dto.request.CreditDebitRequest;
 import com.bank.banking.dto.request.EnquiryRequest;
+import com.bank.banking.dto.request.TransferRequest;
 import com.bank.banking.dto.request.UserRequest;
 import com.bank.banking.dto.response.BankResponse;
 
@@ -17,4 +18,5 @@ public interface UserService {
 
     BankResponse debitAccount(CreditDebitRequest request);
     
+    BankResponse transfer(TransferRequest request);
 }

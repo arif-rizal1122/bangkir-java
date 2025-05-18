@@ -25,6 +25,11 @@ public class AccountUtils  {
     public static final String ACCOUNT_DEBITED_SUCCESS = "007";
     public static final String ACCOUNT_DEBITED_MESSAGE = "Account has been successfully debited!!";
 
+
+    public static final String TRANSFER_SUCCESSFULL_CODE= "008";
+    public static final String TRANSFER_SUUCCESSFULL_MESSAGE= "transfer successfull";
+
+
     public static String generatedAccountNumber(){
     /**
      * 2025 + random 6 digits
