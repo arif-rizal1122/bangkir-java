@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.bank.banking.dto.AccountInfo;
 import com.bank.banking.dto.EmailDetails;
+import com.bank.banking.dto.TransactionDto;
 import com.bank.banking.dto.request.CreditDebitRequest;
 import com.bank.banking.dto.request.EnquiryRequest;
 import com.bank.banking.dto.request.TransferRequest;
@@ -14,6 +15,7 @@ import com.bank.banking.dto.request.UserRequest;
 import com.bank.banking.dto.response.BankResponse;
 import com.bank.banking.entity.User;
 import com.bank.banking.repository.UserRepository;
+import com.bank.banking.service.transaction.TransactionService;
 import com.bank.banking.utils.AccountUtils;
 import com.bank.banking.utils.UserMapper;
 
@@ -24,6 +26,8 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
 
 
+    @Autowired
+    TransactionService transactionService;
 
 
     @Autowired
@@ -129,6 +133,16 @@ public class UserServiceImpl implements UserService {
         User userCredit = userRepository.findByAccountNumber(request.getAccountNumber());
         userCredit.setAccountBalance(userCredit.getAccountBalance().add(request.getAmount()));
         userRepository.save(userCredit);
+
+        // save transaction
+        TransactionDto transactionDto = TransactionDto.builder()
+        .accountNumber(userCredit.getAccountNumber())
+        .transactionType("CREDIT")
+        .amount(request.getAmount())
+        .build();
+
+        transactionService.saveTransaction(transactionDto);
+
         return BankResponse.builder()
             .responseCode(AccountUtils.ACCOUNT_CREATION_SUCCESS)
             .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
@@ -165,9 +179,20 @@ public class UserServiceImpl implements UserService {
                .responseMessage(AccountUtils.INSUFFICIENT_BALANCE_MESSAGE)
                .accountInfo(null)
            .build();
+
        } else {
+
             userToDebit.setAccountBalance(userToDebit.getAccountBalance().subtract(request.getAmount()));
             userRepository.save(userToDebit);
+
+            // save transaction
+            TransactionDto transactionDto = TransactionDto.builder()
+            .accountNumber(userToDebit.getAccountNumber())
+            .transactionType("DEBIT")
+            .amount(request.getAmount())
+            .build();
+            transactionService.saveTransaction(transactionDto);
+
             return BankResponse.builder()
                 .responseCode(AccountUtils.ACCOUNT_DEBITED_SUCCESS)
                 .responseMessage(AccountUtils.ACCOUNT_DEBITED_MESSAGE)
@@ -220,6 +245,8 @@ public class UserServiceImpl implements UserService {
         .messageBody("the sum of " + " " + request.getAmount() + " has been deducted from your account!, your current balance is :" + sourceUserAccountUser.getAccountBalance())
         .build();
         emailService.sendEmailAlert(debitAlerts);
+
+
         
         User destinationAccountUser = userRepository.findByAccountNumber(request.getDestinationAccountNumber());
         destinationAccountUser.setAccountBalance(destinationAccountUser.getAccountBalance().add(request.getAmount()));
@@ -231,6 +258,14 @@ public class UserServiceImpl implements UserService {
         .messageBody("the sum of " + " " + request.getAmount() + " has been sent to your account from :" + sourceUserAccountUser.getAccountBalance())
         .build();
         emailService.sendEmailAlert(creditsAlerts);
+
+        // save transaction
+        TransactionDto transactionDto = TransactionDto.builder()
+        .accountNumber(destinationAccountUser.getAccountNumber())
+        .transactionType("CREDIT")
+        .amount(request.getAmount())
+        .build();
+        transactionService.saveTransaction(transactionDto);
 
         return BankResponse.builder()
         .responseCode(AccountUtils.TRANSFER_SUCCESSFULL_CODE)
