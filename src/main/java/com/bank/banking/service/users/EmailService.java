@@ -5,5 +5,5 @@ import com.bank.banking.dto.EmailDetails;
 public interface EmailService {
     
     void sendEmailAlert(EmailDetails emailDetails);
-
+    void sendEmailWithAttachments(EmailDetails emailDetails);
 }
