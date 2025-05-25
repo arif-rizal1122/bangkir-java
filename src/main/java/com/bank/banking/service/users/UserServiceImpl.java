@@ -3,13 +3,19 @@ package com.bank.banking.service.users;
 import java.math.BigInteger;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.bank.banking.config.JwtTokenProvider;
 import com.bank.banking.dto.AccountInfo;
 import com.bank.banking.dto.EmailDetails;
 import com.bank.banking.dto.TransactionDto;
 import com.bank.banking.dto.request.CreditDebitRequest;
 import com.bank.banking.dto.request.EnquiryRequest;
+import com.bank.banking.dto.request.LoginDtoRequest;
 import com.bank.banking.dto.request.TransferRequest;
 import com.bank.banking.dto.request.UserRequest;
 import com.bank.banking.dto.response.BankResponse;
@@ -19,6 +25,9 @@ import com.bank.banking.service.transaction.TransactionService;
 import com.bank.banking.utils.AccountUtils;
 import com.bank.banking.utils.UserMapper;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -35,48 +44,56 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     EmailServiceImpl emailService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtTokenProvider jwtTokenProvider;
     
     @Override
     public BankResponse createAccount(UserRequest userRequest) {
-        /**
-         * 1. creating an account - saving a new user into the db
-         * 2. check if user already has an account
-         * 
-         * */ 
+        // 1. Check if user already has an account
         if (userRepository.existsByEmail(userRequest.getEmail())) {
-            BankResponse response = BankResponse.builder()
+            return BankResponse.builder()
                     .responseCode(AccountUtils.ACCOUNT_EXISTS_CODE)
                     .responseMessage(AccountUtils.ACCOUNT_EXISTS_MESSAGE)
                     .accountInfo(null)
                     .build();
-                    return response;
         }
-        User newUser = userMapper.toUser(userRequest);
-
-        User savedUser = userRepository.save(newUser);
-
+    
+        // 2. Convert request to user using mapper, pass in passwordEncoder as context
+        User user = userMapper.toUser(userRequest, passwordEncoder);
+    
+        // 3. Save user
+        User savedUser = userRepository.save(user);
+    
+        // 4. Send email
         EmailDetails emailDetails = EmailDetails.builder()
-        .recipient(savedUser.getEmail())
-        .subject("ACCOUNT CREATED")
-        .messageBody("Congratulations! Your Account has been successfully created. \nYour Account Details : \n"
-         + " Account Name " + savedUser.getFirstName() + " " + savedUser.getLastName() + " " + savedUser.getOtherName() + " " + " Account Number\n" + savedUser.getAccountNumber())
-        .build();
+                .recipient(savedUser.getEmail())
+                .subject("ACCOUNT CREATED")
+                .messageBody("Congratulations! Your Account has been successfully created.\n"
+                        + "Your Account Details:\n"
+                        + "Account Name: " + savedUser.getFirstName() + " " + savedUser.getLastName() + " " + savedUser.getOtherName() + "\n"
+                        + "Account Number: " + savedUser.getAccountNumber())
+                .build();
         emailService.sendEmailAlert(emailDetails);
-
-            return BankResponse.builder()
-            .responseCode(AccountUtils.ACCOUNT_CREATION_SUCCESS)
-            .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
-            .accountInfo(AccountInfo.builder()
-            .accountBalance(savedUser.getAccountBalance())
-            .accountNumber(savedUser.getAccountNumber())
-            .accountName(savedUser.getFirstName() + " " + savedUser.getLastName() + " " + savedUser.getOtherName())
-            .build()) 
-        .build();
+    
+        // 5. Return response
+        return BankResponse.builder()
+                .responseCode(AccountUtils.ACCOUNT_CREATION_SUCCESS)
+                .responseMessage(AccountUtils.ACCOUNT_CREATION_MESSAGE)
+                .accountInfo(AccountInfo.builder()
+                        .accountBalance(savedUser.getAccountBalance())
+                        .accountNumber(savedUser.getAccountNumber())
+                        .accountName(savedUser.getFirstName() + " " + savedUser.getLastName() + " " + savedUser.getOtherName())
+                        .build())
+                .build();
     }
-
-
-
-
+    
 
 
     /**
@@ -273,5 +290,33 @@ public class UserServiceImpl implements UserService {
         .accountInfo(null)
         .build();
      }
+
+
+
+     @Override
+     public BankResponse login(LoginDtoRequest loginDto) {
+
+        Authentication authentication = null;
+        authentication = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getPassword())
+        );
+        
+        EmailDetails loginAlert = EmailDetails.builder()
+        .subject("You're logged in!")
+        .recipient(loginDto.getEmail())
+        .messageBody("you logged into your account. if you did initiate this request please contact your bank")
+        .build();
+        emailService.sendEmailAlert(loginAlert);
+
+        return BankResponse.builder()
+        .responseCode("login success")
+        .responseMessage(jwtTokenProvider.generateToken(authentication))
+        .build();
+
+
+    }
+
+
+
  
 }

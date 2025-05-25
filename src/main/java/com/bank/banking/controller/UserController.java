@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.bank.banking.dto.request.CreditDebitRequest;
 import com.bank.banking.dto.request.EnquiryRequest;
+import com.bank.banking.dto.request.LoginDtoRequest;
 import com.bank.banking.dto.request.TransferRequest;
 import com.bank.banking.dto.request.UserRequest;
 import com.bank.banking.dto.response.BankResponse;
@@ -30,6 +31,15 @@ public class UserController {
     @ApiResponse(responseCode = "201", description = "User account created successfully")
     public BankResponse createAccount(@RequestBody UserRequest userRequest){
         return userService.createAccount(userRequest);
+    }
+
+    @PostMapping("/login")
+    @Operation(
+        summary = "Login user after create",
+        description = ":login user endpoint"
+    )
+    public BankResponse login(@RequestBody LoginDtoRequest request){
+        return userService.login(request);
     }
 
     @GetMapping("/balanceEnquiry")
